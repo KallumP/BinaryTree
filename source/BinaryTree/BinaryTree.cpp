@@ -64,7 +64,7 @@ public:
 	Tree() {
 		root = new Node();
 		totalHeight = 0;
-		nodeRadius = 20;
+		nodeRadius = 15;
 	}
 
 	//inserts a key into the root
@@ -84,15 +84,20 @@ public:
 	//draws this node, and then calls the draw on its children nodes
 	void Draw(Node* node, int level, int position) {
 
-		//the string of the node to draw's value
-		std::string valueString = std::to_string(node->value);
-
 		//the position to draw this node
 		Vector2 nodePosition = GetPosition(level, position);
 
+		//the string of the node to draw's value
+		std::string valueString = std::to_string(node->value);
+		int fontSize = 4;
+		Vector2 stringPos;
+		stringPos.x = nodePosition.x - (valueString.size() * fontSize * 1.5) / 2;
+		stringPos.y = nodePosition.y - (fontSize * 1.5) / 2;
+
+
 		//draw this node
-		DrawCircle(nodePosition.x, nodePosition.y, nodeRadius, RED);
-		DrawText(valueString.c_str(), nodePosition.x, nodePosition.y, 4, BLACK);
+		DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, RED);
+		DrawText(valueString.c_str(), stringPos.x, stringPos.y, fontSize, BLACK);
 
 		//draw the lNode subtree
 		if (node->lChild != nullptr) {
@@ -186,8 +191,9 @@ int main(void)
 
 		ClearBackground(RAYWHITE);
 
+		std::string heightString = "Height of tree: " + std::to_string(t->totalHeight);
 		//draws the height of the tree
-		DrawText(std::to_string(t->totalHeight).c_str(), 10, 10, 4, BLACK);
+		DrawText(heightString.c_str(), 10, 10, 4, BLACK);
 
 		//draws the tree
 		t->Draw(t->root, 0, 0);
