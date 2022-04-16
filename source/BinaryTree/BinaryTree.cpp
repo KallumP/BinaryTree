@@ -10,14 +10,20 @@ struct Node {
 	int value;
 	Node* lChild;
 	Node* rChild;
+	Node* parent;
+
+	int lDepth;
+	int rDepth;
+	int balanceFactor;
 
 	void Set(int _value) {
 		value = _value;
+		balanceFactor = 0;
 	}
 
 	int Insert(int _value, int height) {
 
-		int toReturn = height + 1;
+		int insertHeight = height + 1;
 
 		//checks if this value was smaller or equal
 		if (_value <= value) {
@@ -31,7 +37,7 @@ struct Node {
 			} else {
 
 				//inserts into the left node
-				toReturn = lChild->Insert(_value, toReturn);
+				insertHeight = lChild->Insert(_value, insertHeight);
 			}
 		} else {
 
@@ -44,11 +50,44 @@ struct Node {
 			} else {
 
 				//inserts into the right node
-				toReturn = rChild->Insert(_value, toReturn);
+				insertHeight = rChild->Insert(_value, insertHeight);
 			}
 		}
 
-		return toReturn;
+		return insertHeight;
+	}
+
+	void CalculateBalance() {
+
+		CalculateDepths();
+
+		balanceFactor = rDepth - lDepth;
+	}
+
+	int CalculateDepths() {
+
+		if (lChild == nullptr) {
+			lDepth = 1;
+		} else {
+
+			lChild->CalculateDepths();
+			lDepth = 1 + lChild->BiggestDepth();
+		}
+
+		if (rChild == nullptr) {
+			rDepth = 1;
+		} else {
+			rChild->CalculateDepths();
+			rDepth = 1 + rChild->BiggestDepth();
+		}
+
+		return BiggestDepth();
+	}
+
+	int BiggestDepth() {
+		if (lDepth > rDepth)
+			return lDepth;
+		return rDepth;
 	}
 };
 
@@ -79,6 +118,8 @@ public:
 
 		if (totalHeight < _height)
 			totalHeight = _height;
+
+		CalculateBalances(root);
 	}
 
 	//draws this node, and then calls the draw on its children nodes
@@ -98,6 +139,7 @@ public:
 		//draw this node
 		DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, RED);
 		DrawText(valueString.c_str(), stringPos.x, stringPos.y, fontSize, BLACK);
+		DrawText(std::to_string(node->balanceFactor).c_str(), stringPos.x, stringPos.y + fontSize * 1.5, fontSize, BLACK);
 
 		//draw the lNode subtree
 		if (node->lChild != nullptr) {
@@ -136,6 +178,18 @@ public:
 		return pos;
 	}
 
+
+	void CalculateBalances(Node* node) {
+
+		node->CalculateBalance();
+
+		if (node->lChild != nullptr)
+			CalculateBalances(node->lChild);
+		
+		if (node->rChild != nullptr)
+			CalculateBalances(node->rChild);
+
+	}
 };
 
 Tree* t;
@@ -157,28 +211,30 @@ void InsertRandoms(int count) {
 	}
 }
 
+void DebugValues() {
+	t->InsertRoot(10);
+
+	t->Insert(5);
+	t->Insert(15);
+
+	t->Insert(4);
+	t->Insert(6);
+	t->Insert(14);
+	t->Insert(16);
+}
+
 //remakes the tree with an amount of nodes
 void RemakeTree(int amount) {
 	Reset();
 	InsertRandoms(amount);
+	//DebugValues();
 }
 
 //inserts a perfect binary tree of height 3
-void DebugValues() {
-	//t->InsertRoot(10);
-
-	//t->Insert(5);
-	//t->Insert(15);
-	//
-	//t->Insert(4);
-	//t->Insert(6);
-	//t->Insert(14);
-	//t->Insert(16);
-}
 
 int main(void)
 {
-	int nodeCount = 30;
+	int nodeCount = 10;
 
 	RemakeTree(nodeCount);
 
