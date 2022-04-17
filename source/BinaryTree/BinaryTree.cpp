@@ -7,26 +7,34 @@ const int screenHeight = 720;
 
 
 struct Node {
+
 	int value;
 	Node* lChild;
 	Node* rChild;
-	Node* parent;
+	bool rebalance;
 
 	int lDepth;
 	int rDepth;
 	int balanceFactor;
 
+	//sets the value of this node
 	void Set(int _value) {
 		value = _value;
 		balanceFactor = 0;
 	}
 
+	//tries to insert a value into this node
 	int Insert(int _value, int height) {
 
 		int insertHeight = height + 1;
 
-		//checks if this value was smaller or equal
-		if (_value <= value) {
+		if (_value == value) {
+
+			return -1;
+
+
+			//checks if this value was smaller or equal
+		} else if (_value < value) {
 
 			//checks if the left node was not occupied
 			if (lChild == nullptr) {
@@ -39,6 +47,7 @@ struct Node {
 				//inserts into the left node
 				insertHeight = lChild->Insert(_value, insertHeight);
 			}
+
 		} else {
 
 			//checks if the right node was not occupied
@@ -57,33 +66,35 @@ struct Node {
 		return insertHeight;
 	}
 
-	void CalculateBalance() {
+	//Calculates the depth of this balance factor of this node, returns this node's depth
+	int CalculateBalanceFactor() {
 
-		CalculateDepths();
-
-		balanceFactor = rDepth - lDepth;
-	}
-
-	int CalculateDepths() {
-
+		//gets the depth of the left side
 		if (lChild == nullptr) {
 			lDepth = 1;
 		} else {
 
-			lChild->CalculateDepths();
+			lChild->CalculateBalanceFactor();
 			lDepth = 1 + lChild->BiggestDepth();
 		}
 
+		//gets the depth of the right side
 		if (rChild == nullptr) {
 			rDepth = 1;
 		} else {
-			rChild->CalculateDepths();
+			rChild->CalculateBalanceFactor();
 			rDepth = 1 + rChild->BiggestDepth();
 		}
+
+		balanceFactor = rDepth - lDepth;
+
+		rebalance = balanceFactor < -1 || balanceFactor > 1;
+
 
 		return BiggestDepth();
 	}
 
+	//returns the biggest depth from either the left or right side
 	int BiggestDepth() {
 		if (lDepth > rDepth)
 			return lDepth;
@@ -119,7 +130,8 @@ public:
 		if (totalHeight < _height)
 			totalHeight = _height;
 
-		CalculateBalances(root);
+		CalculateBalances();
+		Rebalance(root);
 	}
 
 	//draws this node, and then calls the draw on its children nodes
@@ -135,11 +147,19 @@ public:
 		stringPos.x = nodePosition.x - (valueString.size() * fontSize * 1.5) / 2;
 		stringPos.y = nodePosition.y - (fontSize * 1.5) / 2;
 
+		Color nodeColor;
+		if (node->rebalance)
+			nodeColor = RED;
+		else
+			nodeColor = GREEN;
+
+
+
 
 		//draw this node
-		DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, RED);
+		DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, nodeColor);
 		DrawText(valueString.c_str(), stringPos.x, stringPos.y, fontSize, BLACK);
-		DrawText(std::to_string(node->balanceFactor).c_str(), stringPos.x, stringPos.y + fontSize * 1.5, fontSize, BLACK);
+		//DrawText(std::to_string(node->balanceFactor).c_str(), stringPos.x, stringPos.y + fontSize * 1.5, fontSize, BLACK);
 
 		//draw the lNode subtree
 		if (node->lChild != nullptr) {
@@ -178,21 +198,180 @@ public:
 		return pos;
 	}
 
+	//calculates the balances of the nodes in the tree
+	void CalculateBalances() {
 
-	void CalculateBalances(Node* node) {
+		root->CalculateBalanceFactor();
 
-		node->CalculateBalance();
+	}
+
+	//rebalances all nodes that need it
+	void Rebalance(Node* node) {
 
 		if (node->lChild != nullptr)
-			CalculateBalances(node->lChild);
-		
-		if (node->rChild != nullptr)
-			CalculateBalances(node->rChild);
+			Rebalance(node->lChild);
 
+		if (node->rChild != nullptr)
+			Rebalance(node->rChild);
+
+
+		if (node->rebalance) {
+
+			std::cout << "Rebalancing node: " + std::to_string(node->value) + "\n";
+			//checks if this was a left case
+			if (node->balanceFactor < 0) {
+
+
+
+				//checks if the left child exists
+				if (node->lChild != nullptr)
+
+					//checks if this was a left left case
+					if (node->lChild->lDepth > node->lChild->rDepth)
+
+						LLCase(node);
+
+				//checks for left right case
+					else if (node->lChild->lDepth < node->lChild->rDepth)
+
+						LRCase(node);
+
+				//checks if this was a right case
+			} else if (node->balanceFactor > 0)
+
+				//checks if the right child exists
+				if (node->rChild != nullptr)
+
+					//checks if this was a right right case
+					if (node->rChild->lDepth < node->rChild->rDepth)
+
+						RRCase(node);
+
+			//checks for right left case
+					else if (node->rChild->lDepth > node->rChild->rDepth)
+
+						RLCase(node);
+
+			CalculateBalances();
+
+		}
+	}
+
+	//CHECK ALL NUMBERING. MAKE SURE ITS ALL CONSISTENT USE 1,2,3. abcd
+	void LRCase(Node* node) {
+
+		Node one = *node->lChild;
+		Node two = *node->lChild->rChild;
+
+		Node B = Node();
+		bool BNull;
+		if (two.lChild != nullptr) {
+			BNull = false;
+			B = *two.lChild;
+		} else {
+			BNull = true;
+		}
+
+
+		node->lChild = new Node();
+		*node->lChild = two;
+
+		one.rChild = new Node();
+		if (BNull)
+			one.rChild = nullptr;
+		else
+			*one.rChild = B;
+
+		node->lChild->lChild = new Node();
+		*node->lChild->lChild = one;
+
+		LLCase(node);
+	}
+	void LLCase(Node* node) {
+
+		Node three = *node;
+		Node two = *node->lChild;
+
+		Node C = Node();
+		bool CNull;
+		if (two.rChild != nullptr) {
+			CNull = false;
+			C = *two.rChild;
+		} else {
+			CNull = true;
+		}
+
+
+		*node = two;
+
+		three.lChild = new Node();
+		if (CNull)
+			three.lChild = nullptr;
+		else
+			*three.lChild = C;
+
+		node->rChild = new Node();
+		*node->rChild = three;
+	}
+
+	void RLCase(Node* node) {
+
+		Node two = *node->rChild;
+		Node three = *node->rChild->lChild;
+
+		Node C = Node();
+		bool CNull;
+		if (two.rChild != nullptr) {
+			CNull = false;
+			C = *two.rChild;
+		} else {
+			CNull = true;
+		}
+
+
+		node->rChild = new Node();
+		*node->rChild = two;
+
+		three.lChild = new Node();
+		if (CNull)
+			three.lChild = nullptr;
+		else
+			*three.lChild = C;
+
+		node->rChild->rChild = new Node();
+		*node->rChild->rChild = three;
+
+		RRCase(node);
+	}
+	void RRCase(Node* node) {
+
+		Node one = *node;
+		Node two = *node->rChild;
+
+		Node B = Node();
+		bool BNull;
+		if (two.lChild != nullptr) {
+			BNull = false;
+			B = *two.lChild;
+		} else {
+			BNull = true;
+		}
+
+		*node = two;
+
+		one.rChild = new Node();
+		if (BNull)
+			one.rChild = nullptr;
+		else
+			*one.rChild = B;
+
+		node->lChild = new Node();
+		*node->lChild = one;
 	}
 };
 
 Tree* t;
+
 
 //resets the tree
 void Reset() {
@@ -214,13 +393,18 @@ void InsertRandoms(int count) {
 void DebugValues() {
 	t->InsertRoot(10);
 
-	t->Insert(5);
+	t->Insert(4);
 	t->Insert(15);
 
-	t->Insert(4);
+	t->Insert(3);
+	t->Insert(5);
+
 	t->Insert(6);
-	t->Insert(14);
-	t->Insert(16);
+	//t->Insert(2);
+	//t->Insert(14);
+	//t->Insert(16);
+
+	t->Rebalance(t->root);
 }
 
 //remakes the tree with an amount of nodes
@@ -234,7 +418,7 @@ void RemakeTree(int amount) {
 
 int main(void)
 {
-	int nodeCount = 10;
+	int nodeCount = 30;
 
 	RemakeTree(nodeCount);
 
