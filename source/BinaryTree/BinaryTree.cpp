@@ -11,16 +11,20 @@ int toAddMantisa;
 int toAddExponent;
 int toAdd = 100;
 
+Vector2 mousePos;
+
 struct Node {
 
 	int value;
 	Node* lChild;
 	Node* rChild;
-	bool rebalance;
 
+	bool rebalance;
 	int lDepth;
 	int rDepth;
 	int balanceFactor;
+
+	bool hovered;
 
 	//sets the value of this node
 	void Set(int _value) {
@@ -150,9 +154,11 @@ public:
 		//the string of the node to draw's value
 		std::string valueString = std::to_string(node->value);
 		int fontSize = 4;
+		Color fontColor = BLACK;
 		Vector2 stringPos;
 		stringPos.x = nodePosition.x - (valueString.size() * fontSize * 1.5) / 2;
 		stringPos.y = nodePosition.y - (fontSize * 1.5) / 2;
+
 
 		Color nodeColor;
 		if (node->rebalance)
@@ -160,13 +166,19 @@ public:
 		else
 			nodeColor = GREEN;
 
+		Color selectedColor = RED;
+		CheckHovered(node, nodePosition);
+
 
 
 
 		//draw this node
 		DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, nodeColor);
-		DrawText(valueString.c_str(), stringPos.x, stringPos.y, fontSize, BLACK);
-		//DrawText(std::to_string(node->balanceFactor).c_str(), stringPos.x, stringPos.y + fontSize * 1.5, fontSize, BLACK);
+
+		if (node->hovered)
+			DrawCircle(nodePosition.x, nodePosition.y, nodeRadius, selectedColor);
+
+		DrawText(valueString.c_str(), stringPos.x, stringPos.y, fontSize, fontColor);
 
 		//draw the lNode subtree
 		if (node->lChild != nullptr) {
@@ -270,7 +282,7 @@ public:
 		}
 	}
 
-	//CHECK ALL NUMBERING. MAKE SURE ITS ALL CONSISTENT USE 1,2,3. abcd
+	//AVL rebalancing
 	void LRCase(Node* node) {
 
 		Node one = *node->lChild;
@@ -381,6 +393,20 @@ public:
 		node->lChild = new Node();
 		*node->lChild = one;
 	}
+
+	void CheckHovered(Node* node, Vector2 nodePos) {
+
+		int xDif = nodePos.x - mousePos.x;
+		int yDif = nodePos.y - mousePos.y;
+
+		int distance = std::sqrt(xDif * xDif + yDif * yDif);
+
+		if (distance < nodeRadius)
+			node->hovered = true;
+		else
+			node->hovered = false;
+
+	}
 };
 
 Tree* t;
@@ -392,11 +418,11 @@ void Reset() {
 }
 
 //inserts random values into the tree
-void InsertRandoms(int count) {
+void InsertRandoms() {
 
 	int randValue = GetRandomValue(0, 1000);
 	t->InsertRoot(randValue);
-	for (int i = 0; i < count - 1; i++) {
+	for (int i = 0; i < toAdd - 1; i++) {
 
 		randValue = GetRandomValue(0, 1000);
 		t->Insert(randValue);
@@ -420,17 +446,17 @@ void DebugValues() {
 }
 
 //remakes the tree with an amount of nodes
-void RemakeTree(int amount) {
+void RemakeTree() {
 	Reset();
-	InsertRandoms(amount);
-	//DebugValues();
+	InsertRandoms();
+	//DebugValues()
 }
 
 
 int main(void)
 {
 
-	RemakeTree(toAdd);
+	RemakeTree();
 
 
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -457,7 +483,7 @@ int main(void)
 
 		//checks if enter key was pressed to make a new tree
 		if (IsKeyPressed(257))
-			RemakeTree(toAdd);
+			RemakeTree();
 
 		if (IsKeyPressed(66))
 			balance = !balance;
@@ -483,6 +509,8 @@ int main(void)
 
 		screenWidth = GetScreenWidth();
 		screenHeight = GetScreenHeight();
+
+		mousePos = GetMousePosition();
 
 	}
 
