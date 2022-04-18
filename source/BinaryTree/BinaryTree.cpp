@@ -4,7 +4,8 @@
 
 int screenWidth = 1280;
 int screenHeight = 720;
-
+bool balance = true;
+bool debug = false;
 
 struct Node {
 
@@ -131,7 +132,9 @@ public:
 			totalHeight = _height;
 
 		CalculateBalances();
-		Rebalance(root);
+
+		if (balance)
+			Rebalance(root);
 	}
 
 	//draws this node, and then calls the draw on its children nodes
@@ -217,7 +220,9 @@ public:
 
 		if (node->rebalance) {
 
-			std::cout << "Rebalancing node: " + std::to_string(node->value) + "\n";
+			if (debug)
+				std::cout << "Rebalancing node: " + std::to_string(node->value) + "\n";
+			
 			//checks if this was a left case
 			if (node->balanceFactor < 0) {
 
@@ -401,9 +406,7 @@ void DebugValues() {
 	t->Insert(5);
 
 	t->Insert(6);
-	//t->Insert(2);
-	//t->Insert(14);
-	//t->Insert(16);
+
 
 	//t->Rebalance(t->root);
 }
@@ -432,7 +435,8 @@ int main(void)
 
 		ClearBackground(RAYWHITE);
 
-		std::string heightString = "Height of tree: " + std::to_string(t->totalHeight);
+		std::string balanceString = std::to_string(balance);
+		std::string heightString = "Height of tree: " + std::to_string(t->totalHeight) + ", Balancing: " + balanceString;
 		//draws the height of the tree
 		DrawText(heightString.c_str(), 10, 10, 4, BLACK);
 
@@ -444,6 +448,11 @@ int main(void)
 		//checks if enter key was pressed to make a new tree
 		if (IsKeyPressed(257))
 			RemakeTree(nodeCount);
+
+		if (IsKeyPressed(66))
+			balance = !balance;
+
+
 
 		screenWidth = GetScreenWidth();
 		screenHeight = GetScreenHeight();
