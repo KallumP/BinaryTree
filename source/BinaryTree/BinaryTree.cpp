@@ -2,8 +2,8 @@
 #include <iostream>
 #include <string>
 
-const int screenWidth = 1280;
-const int screenHeight = 720;
+int screenWidth = 1280;
+int screenHeight = 720;
 
 
 struct Node {
@@ -390,6 +390,7 @@ void InsertRandoms(int count) {
 	}
 }
 
+//values to insert for debugging
 void DebugValues() {
 	t->InsertRoot(10);
 
@@ -404,7 +405,7 @@ void DebugValues() {
 	//t->Insert(14);
 	//t->Insert(16);
 
-	t->Rebalance(t->root);
+	//t->Rebalance(t->root);
 }
 
 //remakes the tree with an amount of nodes
@@ -414,15 +415,15 @@ void RemakeTree(int amount) {
 	//DebugValues();
 }
 
-//inserts a perfect binary tree of height 3
 
 int main(void)
 {
-	int nodeCount = 30;
+	int nodeCount = 100;
 
 	RemakeTree(nodeCount);
 
 
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(screenWidth, screenHeight, "Binary Tree");
 
 	// Draw
@@ -443,6 +444,9 @@ int main(void)
 		//checks if enter key was pressed to make a new tree
 		if (IsKeyPressed(257))
 			RemakeTree(nodeCount);
+
+		screenWidth = GetScreenWidth();
+		screenHeight = GetScreenHeight();
 
 	}
 
