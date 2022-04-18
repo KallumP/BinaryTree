@@ -5,7 +5,11 @@
 int screenWidth = 1280;
 int screenHeight = 720;
 bool balance = true;
-bool debug = false;
+bool debug = true;
+
+int toAddMantisa;
+int toAddExponent;
+int toAdd = 100;
 
 struct Node {
 
@@ -191,7 +195,11 @@ public:
 		//the gaps between nodes
 		Vector2 gaps;
 		gaps.x = (float)screenWidth / (totalNodesInThisLevel + 1);
-		gaps.y = (screenHeight - nodeRadius * 2) / totalHeight;
+
+		if (totalHeight != 0)
+			gaps.y = (screenHeight - nodeRadius * 2) / totalHeight;
+		else
+			gaps.y = (screenHeight - nodeRadius * 2) / 1;
 
 		//the position to draw this node
 		Vector2 pos = Vector2();
@@ -222,7 +230,7 @@ public:
 
 			if (debug)
 				std::cout << "Rebalancing node: " + std::to_string(node->value) + "\n";
-			
+
 			//checks if this was a left case
 			if (node->balanceFactor < 0) {
 
@@ -388,7 +396,7 @@ void InsertRandoms(int count) {
 
 	int randValue = GetRandomValue(0, 1000);
 	t->InsertRoot(randValue);
-	for (int i = 0; i < count; i++) {
+	for (int i = 0; i < count - 1; i++) {
 
 		randValue = GetRandomValue(0, 1000);
 		t->Insert(randValue);
@@ -421,9 +429,8 @@ void RemakeTree(int amount) {
 
 int main(void)
 {
-	int nodeCount = 100;
 
-	RemakeTree(nodeCount);
+	RemakeTree(toAdd);
 
 
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -435,10 +442,13 @@ int main(void)
 
 		ClearBackground(RAYWHITE);
 
-		std::string balanceString = std::to_string(balance);
-		std::string heightString = "Height of tree: " + std::to_string(t->totalHeight) + ", Balancing: " + balanceString;
+		std::string heightString = "Height of tree: " + std::to_string(t->totalHeight);
+		std::string balanceString = ", Balancing: " + std::to_string(balance);
+		std::string toAddString = ", Next adding: " + std::to_string(toAdd) + " nodes";
+
+		std::string out = heightString + balanceString + toAddString;
 		//draws the height of the tree
-		DrawText(heightString.c_str(), 10, 10, 4, BLACK);
+		DrawText(out.c_str(), 10, 10, 4, BLACK);
 
 		//draws the tree
 		t->Draw(t->root, 0, 0);
@@ -447,12 +457,29 @@ int main(void)
 
 		//checks if enter key was pressed to make a new tree
 		if (IsKeyPressed(257))
-			RemakeTree(nodeCount);
+			RemakeTree(toAdd);
 
 		if (IsKeyPressed(66))
 			balance = !balance;
 
+		//checks for number presses
+		for (int i = 1; i < 10; i++)
+			if (IsKeyPressed(48 + i))
+				toAddMantisa = i;
 
+		if (debug)
+			if (IsKeyPressed(49))
+				std::cout << "one pressed\n";
+
+		//checks for 0 press
+		if (IsKeyPressed(48))
+			toAddExponent++;
+
+		//checks for backspace press
+		if (IsKeyPressed(259) && toAddExponent > 0)
+			toAddExponent--;
+
+		toAdd = toAddMantisa * std::pow(10, toAddExponent);
 
 		screenWidth = GetScreenWidth();
 		screenHeight = GetScreenHeight();
