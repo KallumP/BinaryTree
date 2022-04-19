@@ -35,6 +35,9 @@ struct Node {
 	void Set(int _value) {
 		value = _value;
 		balanceFactor = 0;
+
+		if (debug)
+			std::cout << "Inserted value: " << value << "\n";
 	}
 
 	//tries to insert a value into this node
@@ -44,6 +47,7 @@ struct Node {
 
 		if (_value == value) {
 
+			std::cout << "Didn't insert duplicate value: " << value << "\n";
 			return -1;
 
 
@@ -120,15 +124,22 @@ class Tree {
 
 public:
 	Node* root;
-	int totalHeight;
+	Node* hoveredNode;
 
+	std::string valuesString;
+
+	int totalHeight;
 	int nodeRadius;
+
+
 
 	//constructor
 	Tree() {
 		root = new Node();
+		hoveredNode = nullptr;
 		totalHeight = 0;
 		nodeRadius = 15;
+		valuesString = "";
 	}
 
 	//inserts a key into the root
@@ -138,7 +149,7 @@ public:
 
 	//inserts a value into the tree
 	void Insert(int value) {
-		
+
 		int _height = root->Insert(value, 1);
 
 		if (totalHeight < _height)
@@ -166,9 +177,9 @@ public:
 		CheckHovered(node, nodePosition);
 
 		//draws the node
-		if (node->hovered)
+		if (node == hoveredNode)
 			DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, hoverNode);
-		else 
+		else
 			DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, nodeBackground);
 
 		//draws the node value
@@ -190,13 +201,27 @@ public:
 		if (node->rChild != nullptr) {
 
 			Vector2 nextNodePosition = GetPosition(level + 1, position * 2 + 1);
-			
+
 			//draws the line between this node and the next
 			DrawLine(nodePosition.x, nodePosition.y + nodeRadius, nextNodePosition.x, nextNodePosition.y - nodeRadius, fontColor);
 
 			//draws the next node
 			Draw(node->rChild, level + 1, position * 2 + 1);
 		}
+	}
+
+	//returns a string of all the values in the tree (comma separated)
+	std::string Traverse(Node* node) {
+
+		if (node->lChild)
+			Traverse(node->lChild) + ",";
+
+		valuesString += std::to_string(node->value) + ",";
+
+		if (node->rChild)
+			Traverse(node->rChild) + ",";
+
+		return valuesString;
 	}
 
 	//returns the position of a node based on its level and position in that level
@@ -342,8 +367,8 @@ public:
 
 	void RLCase(Node* node) {
 
-		Node two = *node->rChild;
-		Node three = *node->rChild->lChild;
+		Node  two = *node->rChild->lChild;
+		Node three = *node->rChild;
 
 		Node C = Node();
 		bool CNull;
@@ -397,15 +422,22 @@ public:
 
 	void CheckHovered(Node* node, Vector2 nodePos) {
 
+		//gets the distance betweenthe mouse and the center of this node
 		int xDif = nodePos.x - mousePos.x;
 		int yDif = nodePos.y - mousePos.y;
-
 		int distance = std::sqrt(xDif * xDif + yDif * yDif);
 
-		if (distance < nodeRadius)
+		//if the mouse is in this node
+		if (distance < nodeRadius) {
+
 			node->hovered = true;
-		else
+			hoveredNode = node;
+		} else
 			node->hovered = false;
+
+	}
+
+	void DeleteNode() {
 
 	}
 };
@@ -451,6 +483,9 @@ void RemakeTree() {
 	Reset();
 	InsertRandoms();
 	//DebugValues()
+
+	if (debug)
+		std::cout << "Ordered values: " << t->Traverse(t->root) << "\n";
 }
 
 //program draw call
@@ -475,6 +510,9 @@ void Draw() {
 
 //checks for and acts upon keyboard inputs
 void Inputs() {
+
+	if (IsMouseButtonPressed(0))
+		t->DeleteNode();
 
 	//checks if enter key was pressed to make a new tree
 	if (IsKeyPressed(257))
@@ -507,6 +545,11 @@ void Inputs() {
 
 int main(void)
 {
+
+	toAddExponent = 1;
+	toAddMantisa = 1;
+	toAdd = toAddMantisa * std::pow(10, toAddExponent);
+
 	//makes the tree
 	RemakeTree();
 
@@ -516,7 +559,7 @@ int main(void)
 
 	//draw loop
 	while (!WindowShouldClose()) {
-		
+
 		Draw();
 
 		Inputs();
