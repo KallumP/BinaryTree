@@ -13,6 +13,11 @@ int toAdd = 100;
 
 Vector2 mousePos;
 
+Color background = CLITERAL(Color) { 10, 24, 32, 255 };
+Color nodeBackground = CLITERAL(Color) { 207, 107, 221, 255 };
+Color fontColor = WHITE;
+Color hoverNode = CLITERAL(Color) { 227, 0, 43, 255 };
+
 struct Node {
 
 	int value;
@@ -133,7 +138,7 @@ public:
 
 	//inserts a value into the tree
 	void Insert(int value) {
-
+		
 		int _height = root->Insert(value, 1);
 
 		if (totalHeight < _height)
@@ -151,41 +156,33 @@ public:
 		//the position to draw this node
 		Vector2 nodePosition = GetPosition(level, position);
 
-		//the string of the node to draw's value
+		//the string of the node's value
 		std::string valueString = std::to_string(node->value);
 		int fontSize = 4;
-		Color fontColor = BLACK;
 		Vector2 stringPos;
 		stringPos.x = nodePosition.x - (valueString.size() * fontSize * 1.5) / 2;
 		stringPos.y = nodePosition.y - (fontSize * 1.5) / 2;
 
-
-		Color nodeColor;
-		if (node->rebalance)
-			nodeColor = RED;
-		else
-			nodeColor = GREEN;
-
-		Color selectedColor = RED;
 		CheckHovered(node, nodePosition);
 
-
-
-
-		//draw this node
-		DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, nodeColor);
-
+		//draws the node
 		if (node->hovered)
-			DrawCircle(nodePosition.x, nodePosition.y, nodeRadius, selectedColor);
+			DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, hoverNode);
+		else 
+			DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, nodeBackground);
 
-		DrawText(valueString.c_str(), stringPos.x, stringPos.y, fontSize, fontColor);
+		//draws the node value
+		DrawText(valueString.c_str(), stringPos.x, stringPos.y, fontSize, nodeBackground);
 
 		//draw the lNode subtree
 		if (node->lChild != nullptr) {
 
 			Vector2 nextNodePosition = GetPosition(level + 1, position * 2);
-			DrawLine(nodePosition.x, nodePosition.y + nodeRadius, nextNodePosition.x, nextNodePosition.y - nodeRadius, BLACK);
 
+			//draws the line between this node and the next
+			DrawLine(nodePosition.x, nodePosition.y + nodeRadius, nextNodePosition.x, nextNodePosition.y - nodeRadius, fontColor);
+
+			//draws the next node
 			Draw(node->lChild, level + 1, position * 2);
 		}
 
@@ -193,7 +190,11 @@ public:
 		if (node->rChild != nullptr) {
 
 			Vector2 nextNodePosition = GetPosition(level + 1, position * 2 + 1);
-			DrawLine(nodePosition.x, nodePosition.y + nodeRadius, nextNodePosition.x, nextNodePosition.y - nodeRadius, BLACK);
+			
+			//draws the line between this node and the next
+			DrawLine(nodePosition.x, nodePosition.y + nodeRadius, nextNodePosition.x, nextNodePosition.y - nodeRadius, fontColor);
+
+			//draws the next node
 			Draw(node->rChild, level + 1, position * 2 + 1);
 		}
 	}
@@ -466,7 +467,7 @@ int main(void)
 	while (!WindowShouldClose()) {
 		BeginDrawing();
 
-		ClearBackground(RAYWHITE);
+		ClearBackground(background);
 
 		std::string heightString = "Height of tree: " + std::to_string(t->totalHeight);
 		std::string balanceString = ", Balancing: " + std::to_string(balance);
@@ -474,7 +475,7 @@ int main(void)
 
 		std::string out = heightString + balanceString + toAddString;
 		//draws the height of the tree
-		DrawText(out.c_str(), 10, 10, 4, BLACK);
+		DrawText(out.c_str(), 10, 10, 4, fontColor);
 
 		//draws the tree
 		t->Draw(t->root, 0, 0);
