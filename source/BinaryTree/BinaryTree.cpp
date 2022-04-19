@@ -453,68 +453,79 @@ void RemakeTree() {
 	//DebugValues()
 }
 
+//program draw call
+void Draw() {
+	BeginDrawing();
+
+	ClearBackground(background);
+
+	std::string heightString = "Height of tree: " + std::to_string(t->totalHeight);
+	std::string balanceString = ", Balancing: " + std::to_string(balance);
+	std::string toAddString = ", Next adding: " + std::to_string(toAdd) + " nodes";
+
+	std::string out = heightString + balanceString + toAddString;
+	//draws the height of the tree
+	DrawText(out.c_str(), 10, 10, 4, fontColor);
+
+	//draws the tree
+	t->Draw(t->root, 0, 0);
+
+	EndDrawing();
+}
+
+//checks for and acts upon keyboard inputs
+void Inputs() {
+
+	//checks if enter key was pressed to make a new tree
+	if (IsKeyPressed(257))
+		RemakeTree();
+
+	if (IsKeyPressed(66))
+		balance = !balance;
+
+	//checks for number presses
+	for (int i = 1; i < 10; i++)
+		if (IsKeyPressed(48 + i))
+			toAddMantisa = i;
+
+	if (debug)
+		if (IsKeyPressed(49))
+			std::cout << "one pressed\n";
+
+	//checks for 0 press
+	if (IsKeyPressed(48))
+		toAddExponent++;
+
+	//checks for backspace press
+	if (IsKeyPressed(259) && toAddExponent > 0)
+		toAddExponent--;
+
+	toAdd = toAddMantisa * std::pow(10, toAddExponent);
+
+	mousePos = GetMousePosition();
+}
 
 int main(void)
 {
-
+	//makes the tree
 	RemakeTree();
 
-
+	//sets up the window
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(screenWidth, screenHeight, "Binary Tree");
 
-	// Draw
+	//draw loop
 	while (!WindowShouldClose()) {
-		BeginDrawing();
+		
+		Draw();
 
-		ClearBackground(background);
-
-		std::string heightString = "Height of tree: " + std::to_string(t->totalHeight);
-		std::string balanceString = ", Balancing: " + std::to_string(balance);
-		std::string toAddString = ", Next adding: " + std::to_string(toAdd) + " nodes";
-
-		std::string out = heightString + balanceString + toAddString;
-		//draws the height of the tree
-		DrawText(out.c_str(), 10, 10, 4, fontColor);
-
-		//draws the tree
-		t->Draw(t->root, 0, 0);
-
-		EndDrawing();
-
-		//checks if enter key was pressed to make a new tree
-		if (IsKeyPressed(257))
-			RemakeTree();
-
-		if (IsKeyPressed(66))
-			balance = !balance;
-
-		//checks for number presses
-		for (int i = 1; i < 10; i++)
-			if (IsKeyPressed(48 + i))
-				toAddMantisa = i;
-
-		if (debug)
-			if (IsKeyPressed(49))
-				std::cout << "one pressed\n";
-
-		//checks for 0 press
-		if (IsKeyPressed(48))
-			toAddExponent++;
-
-		//checks for backspace press
-		if (IsKeyPressed(259) && toAddExponent > 0)
-			toAddExponent--;
-
-		toAdd = toAddMantisa * std::pow(10, toAddExponent);
+		Inputs();
 
 		screenWidth = GetScreenWidth();
 		screenHeight = GetScreenHeight();
-
-		mousePos = GetMousePosition();
-
 	}
 
+	//closes the window
 	CloseWindow();
 
 	return 0;
