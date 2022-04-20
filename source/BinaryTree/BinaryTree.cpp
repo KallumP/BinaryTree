@@ -23,6 +23,7 @@ struct Node {
 	int value;
 	Node* lChild;
 	Node* rChild;
+	Node* parent;
 
 	bool rebalance;
 	int lDepth;
@@ -32,9 +33,11 @@ struct Node {
 	bool hovered;
 
 	//sets the value of this node
-	void Set(int _value) {
+	void Set(Node* _parent, int _value) {
 		value = _value;
 		balanceFactor = 0;
+
+		parent = _parent;
 
 		if (debug)
 			std::cout << "Inserted value: " << value << "\n";
@@ -59,7 +62,7 @@ struct Node {
 
 				//creates the new left node and sets its value
 				lChild = new Node();
-				lChild->Set(_value);
+				lChild->Set(this, _value);
 			} else {
 
 				//inserts into the left node
@@ -73,7 +76,7 @@ struct Node {
 
 				//creates the new right node and sets its value
 				rChild = new Node();
-				rChild->Set(_value);
+				rChild->Set(this, _value);
 			} else {
 
 				//inserts into the right node
@@ -144,7 +147,7 @@ public:
 
 	//inserts a key into the root
 	void InsertRoot(int value) {
-		root->Set(value);
+		root->Set(nullptr, value);
 	}
 
 	//inserts a value into the tree
@@ -185,6 +188,9 @@ public:
 		//draws the node value
 		DrawText(valueString.c_str(), stringPos.x, stringPos.y, fontSize, nodeBackground);
 
+		if (node->value == 329) {
+			std::cout << "";
+		}
 		//draw the lNode subtree
 		if (node->lChild != nullptr) {
 
@@ -326,6 +332,7 @@ public:
 
 		node->lChild = new Node();
 		*node->lChild = two;
+		node->lChild->parent = node;
 
 		one.rChild = new Node();
 		if (BNull)
@@ -333,13 +340,19 @@ public:
 		else
 			*one.rChild = B;
 
+
 		node->lChild->lChild = new Node();
 		*node->lChild->lChild = one;
+
+		if (!BNull)
+			*node->lChild->lChild->rChild->parent = *node->lChild->lChild;
+		node->lChild->lChild->parent = node->lChild;
 
 		LLCase(node);
 	}
 	void LLCase(Node* node) {
 
+		Node* parent = node->parent;
 		Node three = *node;
 		Node two = *node->lChild;
 
@@ -354,6 +367,7 @@ public:
 
 
 		*node = two;
+		node->parent = parent;
 
 		three.lChild = new Node();
 		if (CNull)
@@ -361,8 +375,14 @@ public:
 		else
 			*three.lChild = C;
 
+
 		node->rChild = new Node();
 		*node->rChild = three;
+
+		if (!CNull)
+			*node->rChild->lChild->parent = *node->rChild;
+		node->rChild->parent = node;
+		node->lChild->parent = node;
 	}
 
 	void RLCase(Node* node) {
@@ -382,6 +402,7 @@ public:
 
 		node->rChild = new Node();
 		*node->rChild = two;
+		node->rChild->parent = node;
 
 		three.lChild = new Node();
 		if (CNull)
@@ -389,13 +410,19 @@ public:
 		else
 			*three.lChild = C;
 
+
 		node->rChild->rChild = new Node();
 		*node->rChild->rChild = three;
+
+		if (!CNull)
+			node->rChild->rChild->lChild->parent = node->rChild->rChild;
+		node->rChild->rChild->parent = node->rChild;
 
 		RRCase(node);
 	}
 	void RRCase(Node* node) {
 
+		Node* parent = node->parent;
 		Node one = *node;
 		Node two = *node->rChild;
 
@@ -409,6 +436,7 @@ public:
 		}
 
 		*node = two;
+		node->parent = parent;
 
 		one.rChild = new Node();
 		if (BNull)
@@ -416,10 +444,20 @@ public:
 		else
 			*one.rChild = B;
 
+
 		node->lChild = new Node();
 		*node->lChild = one;
+
+		if (!BNull)
+			node->lChild->rChild->parent = node->lChild;
+		node->lChild->parent = node;
+		node->rChild->parent = node;
+
 	}
 
+	//figure out why the pointers are not pointing to right locatoin after avl 
+	// 
+	//checks and saves if this node was being hovered on
 	void CheckHovered(Node* node, Vector2 nodePos) {
 
 		//gets the distance betweenthe mouse and the center of this node
@@ -428,18 +466,56 @@ public:
 		int distance = std::sqrt(xDif * xDif + yDif * yDif);
 
 		//if the mouse is in this node
-		if (distance < nodeRadius) {
-
-			node->hovered = true;
+		if (distance < nodeRadius)
 			hoveredNode = node;
-		} else
-			node->hovered = false;
-
 	}
 
-	void DeleteNode() {
+	//deletes the hovered node
+	void DeleteHoveredNode() {
 
+		//checks if the hovered node was the root
+		bool rootNode = false;
+		if (hoveredNode == root)
+			rootNode = true;
+
+		//saves the node's pointers
+		Node* parent = hoveredNode->parent;
+		Node* lChild = hoveredNode->lChild;
+		Node* rChild = hoveredNode->rChild;
+
+
+		//checks which side of the parent the hovered node was on
+		bool rSide = false;
+		if (parent->rChild == hoveredNode)
+			rSide = true;
+
+		//sets the parents connection to the hovered node to null
+		if (rSide)
+			parent->rChild = nullptr;
+		else
+			parent->lChild = nullptr;
+
+		if (lChild != nullptr) {
+
+			//sets the inner most node to the lChild
+			Node* innerLeft = lChild;
+
+			//keeps saving the rChild of the innerLeft
+			while (innerLeft->rChild != nullptr)
+				innerLeft = innerLeft->rChild;
+
+			////sets the parent to the innerLeft node
+			//if (rSide)
+			//	parent->rChild = innerLeft;
+			//else
+			//	parent->lChild = innerLeft;
+
+			std::cout << "Deleted node: " << hoveredNode->value << "\n";
+			delete hoveredNode;
+
+		}
 	}
+
 };
 
 Tree* t;
@@ -512,7 +588,7 @@ void Draw() {
 void Inputs() {
 
 	if (IsMouseButtonPressed(0))
-		t->DeleteNode();
+		t->DeleteHoveredNode();
 
 	//checks if enter key was pressed to make a new tree
 	if (IsKeyPressed(257))
@@ -546,8 +622,8 @@ void Inputs() {
 int main(void)
 {
 
-	toAddExponent = 1;
-	toAddMantisa = 1;
+	toAddExponent = 0;
+	toAddMantisa = 5;
 	toAdd = toAddMantisa * std::pow(10, toAddExponent);
 
 	//makes the tree
