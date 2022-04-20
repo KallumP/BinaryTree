@@ -486,34 +486,125 @@ public:
 
 		//checks which side of the parent the hovered node was on
 		bool rSide = false;
-		if (parent->rChild == hoveredNode)
-			rSide = true;
+		if (!rootNode)
+			if (parent->rChild == hoveredNode)
+				rSide = true;
 
-		//sets the parents connection to the hovered node to null
-		if (rSide)
-			parent->rChild = nullptr;
-		else
-			parent->lChild = nullptr;
 
 		if (lChild != nullptr) {
 
-			//sets the inner most node to the lChild
-			Node* innerLeft = lChild;
+			//sets the node to promote to the lChild
+			Node toPromote = *lChild;
 
-			//keeps saving the rChild of the innerLeft
-			while (innerLeft->rChild != nullptr)
-				innerLeft = innerLeft->rChild;
+			//keeps saving the rChild of toPromote
+			while (toPromote.rChild != nullptr)
+				toPromote = *toPromote.rChild;
 
-			////sets the parent to the innerLeft node
-			//if (rSide)
-			//	parent->rChild = innerLeft;
-			//else
-			//	parent->lChild = innerLeft;
+			//checks if the hovered node was the promote parent
+			if (toPromote.parent == hoveredNode)
+				toPromote.parent->lChild = toPromote.rChild;
+			else
+				toPromote.parent->rChild = toPromote.rChild;
 
-			std::cout << "Deleted node: " << hoveredNode->value << "\n";
-			delete hoveredNode;
+			//sets the l/r children of toPromote
+			toPromote.rChild = rChild;
+			toPromote.lChild = lChild;
 
+
+			//deleted node's parent node points to toPromote
+			if (!rootNode) {
+
+				toPromote.parent = parent;
+
+				//sets the parent to point to toPromote
+				if (rSide) {
+
+					parent->rChild = new Node();
+					*parent->rChild = toPromote;
+
+					//sets the children's parents of the the promoted node to the promoted node
+					if (parent->rChild->lChild != nullptr)
+						parent->rChild->lChild->parent = parent->rChild;
+
+					if (parent->rChild->rChild != nullptr)
+						parent->rChild->rChild->parent = parent->rChild;
+
+				} else {
+
+					parent->lChild = new Node();
+					*parent->lChild = toPromote;
+
+					//sets the children's parents of the the promoted node to the promoted node
+					if (parent->lChild->lChild != nullptr)
+						parent->lChild->lChild->parent = parent->lChild;
+
+					if (parent->lChild->rChild != nullptr)
+						parent->lChild->rChild->parent = parent->lChild;
+				}
+			} else {
+
+				//root doesn't have a parent
+				toPromote.parent = nullptr;
+
+				//sets the root to the innerLeft node
+				*root = toPromote;
+
+			}
+
+		} else if (rChild != nullptr) {
+
+			//sets the node to promote to the lChild
+			Node toPromote = *rChild;
+
+			//keeps saving the rChild of toPromote
+			while (toPromote.rChild != nullptr)
+				toPromote = *toPromote.lChild;
+
+
+			//sets the l/r children of toPromote
+			toPromote.lChild = nullptr;
+			toPromote.rChild = rChild;
+
+
+
+			if (!rootNode) {
+
+				//sets the parent to point to toPromote
+				if (rSide) {
+
+					parent->rChild = new Node();
+					*parent->rChild = toPromote;
+
+					//sets the children's parents of the the promoted node to the promoted node
+					if (parent->rChild->lChild != nullptr)
+						parent->rChild->lChild->parent = parent->rChild;
+
+					if (parent->rChild->rChild != nullptr)
+						parent->rChild->rChild->parent = parent->rChild;
+
+				} else {
+
+					parent->lChild = new Node();
+					*parent->lChild = toPromote;
+				}
+			} else {
+
+				//root doesn't have a parent
+				toPromote.parent = nullptr;
+
+				//sets the root to the innerLeft node
+				*root = toPromote;
+
+			}
+		} else {
+			if (rSide)
+				hoveredNode->parent->rChild = nullptr;
+			else
+				hoveredNode->parent->lChild = nullptr;
 		}
+
+		std::cout << "Deleted node: " << hoveredNode->value << "\n";
+		delete hoveredNode;
 	}
 
 };
@@ -540,15 +631,16 @@ void InsertRandoms() {
 
 //values to insert for debugging
 void DebugValues() {
-	t->InsertRoot(10);
+	t->InsertRoot(6);
 
 	t->Insert(4);
-	t->Insert(15);
+	t->Insert(7);
 
-	t->Insert(3);
 	t->Insert(5);
+	t->Insert(2);
 
-	t->Insert(6);
+	t->Insert(8);
+	t->Insert(3);
 
 
 	//t->Rebalance(t->root);
@@ -557,8 +649,8 @@ void DebugValues() {
 //remakes the tree with an amount of nodes
 void RemakeTree() {
 	Reset();
-	InsertRandoms();
-	//DebugValues()
+	//InsertRandoms();
+	DebugValues();
 
 	if (debug)
 		std::cout << "Ordered values: " << t->Traverse(t->root) << "\n";
