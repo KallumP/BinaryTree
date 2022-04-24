@@ -9,7 +9,7 @@ bool debug = true;
 
 int toAddMantisa;
 int toAddExponent;
-int toAdd = 100;
+int toAdd;
 
 Vector2 mousePos;
 
@@ -158,10 +158,11 @@ public:
 		if (totalHeight < _height)
 			totalHeight = _height;
 
-		CalculateBalances();
+		if (balance) {
 
-		if (balance)
+			CalculateBalances();
 			Rebalance(root);
+		}
 	}
 
 	//draws this node, and then calls the draw on its children nodes
@@ -189,6 +190,10 @@ public:
 
 			//draws the node value
 			DrawText(valueString.c_str(), stringPos.x, stringPos.y, fontSize, nodeBackground);
+
+			if (debug)
+				if (node->parent != nullptr)
+					DrawText(std::to_string(node->parent->value).c_str(), stringPos.x, stringPos.y - nodeRadius * 2, fontSize, nodeBackground);
 
 			//draw the lNode subtree
 			if (node->lChild != nullptr) {
@@ -351,37 +356,38 @@ public:
 	}
 	void LLCase(Node* node) {
 
-		Node* parent = node->parent;
-		Node three = *node;
-		Node two = *node->lChild;
 
-		Node C = Node();
-		bool CNull;
-		if (two.rChild != nullptr) {
-			CNull = false;
-			C = *two.rChild;
+		Node* parent = node->parent;
+		bool isRoot = parent == nullptr;
+
+		Node* three = node;
+		Node* two = node->lChild;
+		Node* C = two->rChild;
+
+		//sets the parent/root to point to the two node
+		if (!isRoot) {
+
+			if (parent->rChild == node) {
+				parent->rChild = two;
+				parent->rChild->parent = parent;
+			} else {
+				parent->lChild = two;
+				parent->lChild->parent = parent;
+			}
+
 		} else {
-			CNull = true;
+			root = two;
+			root->parent = nullptr;
 		}
 
+		//sets the new root to have its lChild as the old root
+		two->rChild = node;
+		node->parent = two;
 
-		*node = two;
-		node->parent = parent;
+		//sets the old root to have its rChild as the new root's old lChild
+		node->lChild = C;
+		if (C!= nullptr) C->parent = node;
 
-		three.lChild = new Node();
-		if (CNull)
-			three.lChild = nullptr;
-		else
-			*three.lChild = C;
-
-
-		node->rChild = new Node();
-		*node->rChild = three;
-
-		if (!CNull)
-			*node->rChild->lChild->parent = *node->rChild;
-		node->rChild->parent = node;
-		node->lChild->parent = node;
 	}
 
 	void RLCase(Node* node) {
@@ -422,35 +428,35 @@ public:
 	void RRCase(Node* node) {
 
 		Node* parent = node->parent;
-		Node one = *node;
-		Node two = *node->rChild;
+		bool isRoot = parent == nullptr;
 
-		Node B = Node();
-		bool BNull;
-		if (two.lChild != nullptr) {
-			BNull = false;
-			B = *two.lChild;
+		Node* one = node;
+		Node* two = node->rChild;
+		Node* B = two->lChild;
+
+		//sets the parent/root to point to the two node
+		if (!isRoot) {
+
+			if (parent->rChild == node) {
+				parent->rChild = two;
+				parent->rChild->parent = parent;
+			} else {
+				parent->lChild = two;
+				parent->lChild->parent = parent;
+			}
+
 		} else {
-			BNull = true;
+			root = two;
+			root->parent = nullptr;
 		}
 
-		*node = two;
-		node->parent = parent;
+		//sets the new root to have its lChild as the old root
+		two->lChild = node;
+		node->parent = two;
 
-		one.rChild = new Node();
-		if (BNull)
-			one.rChild = nullptr;
-		else
-			*one.rChild = B;
-
-
-		node->lChild = new Node();
-		*node->lChild = one;
-
-		if (!BNull)
-			node->lChild->rChild->parent = node->lChild;
-		node->lChild->parent = node;
-		node->rChild->parent = node;
+		//sets the old root to have its rChild as the new root's old lChild
+		node->rChild = B;
+		if (B != nullptr) B->parent = node;
 
 	}
 
@@ -473,7 +479,6 @@ public:
 	void DeleteHoveredNode() {
 
 		if (hoveredNode != nullptr) {
-
 
 			//checks if the hovered node was the root
 			bool rootNode = false;
@@ -524,50 +529,47 @@ public:
 			}
 		}
 
-		CalculateBalances();
+		if (balance) {
 
-		if (balance)
+			CalculateBalances();
 			Rebalance(root);
+		}
 	}
 
 	void LSidePromote(Node* parent, Node* lChild, Node* rChild, bool rootNode, bool rSide) {
 
 		//sets the node to promote to the lChild
-		Node toPromote = *lChild;
+		Node* toPromote = lChild;
 
 		//keeps saving the rChild of toPromote
-		while (toPromote.rChild != nullptr)
-			toPromote = *toPromote.rChild;
+		while (toPromote->rChild != nullptr)
+			toPromote = toPromote->rChild;
 
 		//CAN POTENTIALLY SET THESE TWO VALUES TO NULLPTR RATHER THAN toPromote's children--------------------------------------------------------------------------
 		//checks if the hovered node was the promote parent, then sets the pointer of the toPromote's parent to the toPromote (because toPromote is moving)
-		if (toPromote.parent == hoveredNode)
-			toPromote.parent->lChild = toPromote.rChild;
+		if (toPromote->parent == hoveredNode)
+			toPromote->parent->lChild = toPromote->rChild;
 		else
-			toPromote.parent->rChild = toPromote.rChild;
+			toPromote->parent->rChild = toPromote->lChild;
 
 		//sets the l/r children of toPromote
-		toPromote.rChild = rChild;
+		toPromote->rChild = rChild;
 
 		//only sets the lSide if the parent of toPromote wasn't the hovered node. If it was the hovered node, toPromote's lChild would end up pointing back to toPromote
-		if (!(toPromote.parent == hoveredNode))
-			toPromote.lChild = lChild;
-
-		//if (debug)
-		//	std::cout << "Deleted node: " << hoveredNode->value << "\n";
-		////deletes the node
-		//delete hoveredNode;
+		if (!(toPromote->parent == hoveredNode))
+			toPromote->lChild = lChild;
 
 		//deleted node's parent node points to toPromote
 		if (!rootNode) {
 
-			toPromote.parent = parent;
+			toPromote->parent = parent;
 
 			//sets the parent to point to toPromote
 			if (rSide) {
 
 				parent->rChild = new Node();
-				*parent->rChild = toPromote;
+				parent->rChild = toPromote;
+				parent->rChild->parent = parent;
 
 				//sets the children's parents of the the promoted node to the promoted node
 				if (parent->rChild->lChild != nullptr)
@@ -579,7 +581,8 @@ public:
 			} else {
 
 				parent->lChild = new Node();
-				*parent->lChild = toPromote;
+				parent->lChild = toPromote;
+				parent->lChild->parent = parent;
 
 				//sets the children's parents of the the promoted node to the promoted node
 				if (parent->lChild->lChild != nullptr)
@@ -591,10 +594,10 @@ public:
 		} else {
 
 			//root doesn't have a parent
-			toPromote.parent = nullptr;
+			toPromote->parent = nullptr;
 
 			//sets the root to the innerLeft node
-			*root = toPromote;
+			root = toPromote;
 		}
 
 	}
@@ -613,7 +616,7 @@ public:
 		if (toPromote.parent == hoveredNode)
 			toPromote.parent->rChild = toPromote.lChild;
 		else
-			toPromote.parent->lChild = toPromote.lChild;
+			toPromote.parent->lChild = toPromote.rChild;
 
 		//sets the l/r children of toPromote
 		toPromote.lChild = nullptr;
@@ -622,11 +625,6 @@ public:
 		if (!(toPromote.parent == hoveredNode))
 			toPromote.rChild = rChild;
 
-		//if (debug)
-		//	std::cout << "Deleted node: " << hoveredNode->value << "\n";
-		////deletes the node
-		//delete hoveredNode;
-
 		if (!rootNode) {
 
 			//sets the parent to point to toPromote
@@ -634,6 +632,7 @@ public:
 
 				parent->rChild = new Node();
 				*parent->rChild = toPromote;
+				parent->rChild->parent = parent;
 
 				//sets the children's parents of the the promoted node to the promoted node
 				if (parent->rChild->lChild != nullptr)
@@ -646,6 +645,7 @@ public:
 
 				parent->lChild = new Node();
 				*parent->lChild = toPromote;
+				parent->lChild->parent = parent;
 
 				//sets the children's parents of the the promoted node to the promoted node
 				if (parent->lChild->lChild != nullptr)
@@ -689,17 +689,22 @@ void InsertRandoms() {
 
 //values to insert for debugging
 void DebugValues() {
-	t->InsertRoot(6);
+	t->InsertRoot(41);
+	t->Insert(449);
+	t->Insert(328);
 
-	t->Insert(4);
-	t->Insert(7);
+	t->Insert(474);
+	t->Insert(150);
+	t->Insert(709);
+	t->Insert(467);
+	t->Insert(329);
+	t->Insert(936);
+	t->Insert(440);
 
-	t->Insert(5);
-	t->Insert(2);
+	//t->InsertRoot(3);
+	//t->Insert(2);
+	//t->Insert(1);
 
-	t->Insert(8);
-	t->Insert(1);
-	t->Insert(3);
 
 
 	//t->Rebalance(t->root);
@@ -708,8 +713,8 @@ void DebugValues() {
 //remakes the tree with an amount of nodes
 void RemakeTree() {
 	Reset();
-	InsertRandoms();
-	//DebugValues();
+	//InsertRandoms();
+	DebugValues();
 
 	if (debug)
 		std::cout << "Ordered values: " << t->Traverse(t->root) << "\n";
@@ -773,8 +778,8 @@ void Inputs() {
 int main(void)
 {
 
-	toAddExponent = 0;
-	toAddMantisa = 5;
+	toAddExponent = 1;
+	toAddMantisa = 1;
 	toAdd = toAddMantisa * std::pow(10, toAddExponent);
 
 	//makes the tree
