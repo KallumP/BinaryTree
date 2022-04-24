@@ -167,52 +167,52 @@ public:
 	//draws this node, and then calls the draw on its children nodes
 	void Draw(Node* node, int level, int position) {
 
-		//the position to draw this node
-		Vector2 nodePosition = GetPosition(level, position);
+		if (node != nullptr) {
 
-		//the string of the node's value
-		std::string valueString = std::to_string(node->value);
-		int fontSize = 4;
-		Vector2 stringPos;
-		stringPos.x = nodePosition.x - (valueString.size() * fontSize * 1.5) / 2;
-		stringPos.y = nodePosition.y - (fontSize * 1.5) / 2;
+			//the position to draw this node
+			Vector2 nodePosition = GetPosition(level, position);
 
-		CheckHovered(node, nodePosition);
+			//the string of the node's value
+			std::string valueString = std::to_string(node->value);
+			int fontSize = 4;
+			Vector2 stringPos;
+			stringPos.x = nodePosition.x - (valueString.size() * fontSize * 1.5) / 2;
+			stringPos.y = nodePosition.y - (fontSize * 1.5) / 2;
 
-		//draws the node
-		if (node == hoveredNode)
-			DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, hoverNode);
-		else
-			DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, nodeBackground);
+			CheckHovered(node, nodePosition);
 
-		//draws the node value
-		DrawText(valueString.c_str(), stringPos.x, stringPos.y, fontSize, nodeBackground);
+			//draws the node
+			if (node == hoveredNode)
+				DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, hoverNode);
+			else
+				DrawCircleLines(nodePosition.x, nodePosition.y, nodeRadius, nodeBackground);
 
-		if (node->value == 329) {
-			std::cout << "";
-		}
-		//draw the lNode subtree
-		if (node->lChild != nullptr) {
+			//draws the node value
+			DrawText(valueString.c_str(), stringPos.x, stringPos.y, fontSize, nodeBackground);
 
-			Vector2 nextNodePosition = GetPosition(level + 1, position * 2);
+			//draw the lNode subtree
+			if (node->lChild != nullptr) {
 
-			//draws the line between this node and the next
-			DrawLine(nodePosition.x, nodePosition.y + nodeRadius, nextNodePosition.x, nextNodePosition.y - nodeRadius, fontColor);
+				Vector2 nextNodePosition = GetPosition(level + 1, position * 2);
 
-			//draws the next node
-			Draw(node->lChild, level + 1, position * 2);
-		}
+				//draws the line between this node and the next
+				DrawLine(nodePosition.x, nodePosition.y + nodeRadius, nextNodePosition.x, nextNodePosition.y - nodeRadius, fontColor);
 
-		//draw the rNode subtree
-		if (node->rChild != nullptr) {
+				//draws the next node
+				Draw(node->lChild, level + 1, position * 2);
+			}
 
-			Vector2 nextNodePosition = GetPosition(level + 1, position * 2 + 1);
+			//draw the rNode subtree
+			if (node->rChild != nullptr) {
 
-			//draws the line between this node and the next
-			DrawLine(nodePosition.x, nodePosition.y + nodeRadius, nextNodePosition.x, nextNodePosition.y - nodeRadius, fontColor);
+				Vector2 nextNodePosition = GetPosition(level + 1, position * 2 + 1);
 
-			//draws the next node
-			Draw(node->rChild, level + 1, position * 2 + 1);
+				//draws the line between this node and the next
+				DrawLine(nodePosition.x, nodePosition.y + nodeRadius, nextNodePosition.x, nextNodePosition.y - nodeRadius, fontColor);
+
+				//draws the next node
+				Draw(node->rChild, level + 1, position * 2 + 1);
+			}
 		}
 	}
 
@@ -256,61 +256,66 @@ public:
 	//calculates the balances of the nodes in the tree
 	void CalculateBalances() {
 
-		root->CalculateBalanceFactor();
+		if (root != nullptr)
+			root->CalculateBalanceFactor();
 
 	}
 
 	//rebalances all nodes that need it
 	void Rebalance(Node* node) {
 
-		if (node->lChild != nullptr)
-			Rebalance(node->lChild);
-
-		if (node->rChild != nullptr)
-			Rebalance(node->rChild);
+		if (node != nullptr) {
 
 
-		if (node->rebalance) {
+			if (node->lChild != nullptr)
+				Rebalance(node->lChild);
 
-			if (debug)
-				std::cout << "Rebalancing node: " + std::to_string(node->value) + "\n";
-
-			//checks if this was a left case
-			if (node->balanceFactor < 0) {
+			if (node->rChild != nullptr)
+				Rebalance(node->rChild);
 
 
+			if (node->rebalance) {
 
-				//checks if the left child exists
-				if (node->lChild != nullptr)
+				if (debug)
+					std::cout << "Rebalancing node: " + std::to_string(node->value) + "\n";
 
-					//checks if this was a left left case
-					if (node->lChild->lDepth > node->lChild->rDepth)
+				//checks if this was a left case
+				if (node->balanceFactor < 0) {
 
-						LLCase(node);
 
-				//checks for left right case
-					else if (node->lChild->lDepth < node->lChild->rDepth)
 
-						LRCase(node);
+					//checks if the left child exists
+					if (node->lChild != nullptr)
 
-				//checks if this was a right case
-			} else if (node->balanceFactor > 0)
+						//checks if this was a left left case
+						if (node->lChild->lDepth > node->lChild->rDepth)
 
-				//checks if the right child exists
-				if (node->rChild != nullptr)
+							LLCase(node);
 
-					//checks if this was a right right case
-					if (node->rChild->lDepth < node->rChild->rDepth)
+					//checks for left right case
+						else if (node->lChild->lDepth < node->lChild->rDepth)
 
-						RRCase(node);
+							LRCase(node);
 
-			//checks for right left case
-					else if (node->rChild->lDepth > node->rChild->rDepth)
+					//checks if this was a right case
+				} else if (node->balanceFactor > 0)
 
-						RLCase(node);
+					//checks if the right child exists
+					if (node->rChild != nullptr)
 
-			CalculateBalances();
+						//checks if this was a right right case
+						if (node->rChild->lDepth < node->rChild->rDepth)
 
+							RRCase(node);
+
+				//checks for right left case
+						else if (node->rChild->lDepth > node->rChild->rDepth)
+
+							RLCase(node);
+
+				CalculateBalances();
+
+			}
 		}
 	}
 
@@ -494,6 +499,7 @@ public:
 					rSide = true;
 
 
+			//selects a child from the left side (if there was the option)
 			if (lChild != nullptr) {
 
 				//sets the node to promote to the lChild
@@ -503,6 +509,7 @@ public:
 				while (toPromote.rChild != nullptr)
 					toPromote = *toPromote.rChild;
 
+				//CAN POTENTIALLY SET THESE TWO VALUES TO NULLPTR RATHER THAN toPromote's children--------------------------------------------------------------------------
 				//checks if the hovered node was the promote parent, then sets the pointer of the toPromote's parent to the toPromote (because toPromote is moving)
 				if (toPromote.parent == hoveredNode)
 					toPromote.parent->lChild = toPromote.rChild;
@@ -512,10 +519,14 @@ public:
 				//sets the l/r children of toPromote
 				toPromote.rChild = rChild;
 
-				//only sets the lSide if the parent of toPromote wasn't the hovered node. If it was toPromote's lChild would end up pointing back to toPromote
+				//only sets the lSide if the parent of toPromote wasn't the hovered node. If it was the hovered node, toPromote's lChild would end up pointing back to toPromote
 				if (!(toPromote.parent == hoveredNode))
 					toPromote.lChild = lChild;
 
+				//if (debug)
+				//	std::cout << "Deleted node: " << hoveredNode->value << "\n";
+				////deletes the node
+				//delete hoveredNode;
 
 				//deleted node's parent node points to toPromote
 				if (!rootNode) {
@@ -557,21 +568,34 @@ public:
 
 				}
 
+				//selects a child from the right side (if there was one)
 			} else if (rChild != nullptr) {
 
 				//sets the node to promote to the lChild
 				Node toPromote = *rChild;
 
 				//keeps saving the rChild of toPromote
-				while (toPromote.rChild != nullptr)
+				while (toPromote.lChild != nullptr)
 					toPromote = *toPromote.lChild;
 
+				//dont have to set anything if it toPromote.parent was the hovered (because this is the node to be deleted)
+				//checks if the hovered node was the promote parent, then sets the pointer of the toPromote's parent to the toPromote (because toPromote is moving)
+				if (toPromote.parent == hoveredNode)
+					toPromote.parent->rChild = toPromote.lChild;
+				else
+					toPromote.parent->lChild = toPromote.lChild;
 
 				//sets the l/r children of toPromote
 				toPromote.lChild = nullptr;
-				toPromote.rChild = rChild;
 
+				//only sets the rSide if the parent of toPromote wasn't the hovered node. If it was the hovered node, toPromote's rChild would end up pointing back to toPromote
+				if (!(toPromote.parent == hoveredNode))
+					toPromote.rChild = rChild;
 
+				//if (debug)
+				//	std::cout << "Deleted node: " << hoveredNode->value << "\n";
+				////deletes the node
+				//delete hoveredNode;
 
 				if (!rootNode) {
 
@@ -592,6 +616,13 @@ public:
 
 						parent->lChild = new Node();
 						*parent->lChild = toPromote;
+
+						//sets the children's parents of the the promoted node to the promoted node
+						if (parent->lChild->lChild != nullptr)
+							parent->lChild->lChild->parent = parent->lChild;
+
+						if (parent->lChild->rChild != nullptr)
+							parent->lChild->rChild->parent = parent->lChild;
 					}
 				} else {
 
@@ -602,16 +633,34 @@ public:
 					*root = toPromote;
 
 				}
+
+				//there were no children at all
 			} else {
-				if (rSide)
-					hoveredNode->parent->rChild = nullptr;
-				else
-					hoveredNode->parent->lChild = nullptr;
+
+				//if (debug)
+				//	std::cout << "Deleted node: " << hoveredNode->value << "\n";
+				////deletes the node
+				//delete hoveredNode;
+
+				if (!rootNode) {
+
+					//sets the parent's correct side to nullptr
+					if (rSide)
+						hoveredNode->parent->rChild = nullptr;
+					else
+						hoveredNode->parent->lChild = nullptr;
+				} else {
+					root = nullptr;
+				}
 			}
 
-			std::cout << "Deleted node: " << hoveredNode->value << "\n";
-			delete hoveredNode;
+
 		}
+
+		CalculateBalances();
+
+		if (balance)
+			Rebalance(root);
 	}
 
 };
@@ -657,8 +706,8 @@ void DebugValues() {
 //remakes the tree with an amount of nodes
 void RemakeTree() {
 	Reset();
-	//InsertRandoms();
-	DebugValues();
+	InsertRandoms();
+	//DebugValues();
 
 	if (debug)
 		std::cout << "Ordered values: " << t->Traverse(t->root) << "\n";
