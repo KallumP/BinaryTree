@@ -266,13 +266,11 @@ public:
 
 		if (node != nullptr) {
 
-
 			if (node->lChild != nullptr)
 				Rebalance(node->lChild);
 
 			if (node->rChild != nullptr)
 				Rebalance(node->rChild);
-
 
 			if (node->rebalance) {
 
@@ -282,39 +280,35 @@ public:
 				//checks if this was a left case
 				if (node->balanceFactor < 0) {
 
-
-
 					//checks if the left child exists
-					if (node->lChild != nullptr)
+					if (node->lChild != nullptr) {
 
 						//checks if this was a left left case
 						if (node->lChild->lDepth > node->lChild->rDepth)
-
 							LLCase(node);
 
-					//checks for left right case
+						//checks for left right case
 						else if (node->lChild->lDepth < node->lChild->rDepth)
-
 							LRCase(node);
+					}
 
 					//checks if this was a right case
-				} else if (node->balanceFactor > 0)
+				} else if (node->balanceFactor > 0) {
 
 					//checks if the right child exists
-					if (node->rChild != nullptr)
+					if (node->rChild != nullptr) {
 
 						//checks if this was a right right case
 						if (node->rChild->lDepth < node->rChild->rDepth)
-
 							RRCase(node);
 
-				//checks for right left case
+						//checks for right left case
 						else if (node->rChild->lDepth > node->rChild->rDepth)
-
 							RLCase(node);
+					}
+				}
 
 				CalculateBalances();
-
 			}
 		}
 	}
@@ -498,169 +492,177 @@ public:
 				if (parent->rChild == hoveredNode)
 					rSide = true;
 
+			//if (debug)
+			//	std::cout << "Deleted node: " << hoveredNode->value << "\n";
+			////deletes the node
+			//delete hoveredNode;
 
-			//selects a child from the left side (if there was the option)
-			if (lChild != nullptr) {
 
-				//sets the node to promote to the lChild
-				Node toPromote = *lChild;
+			//promotes a child from the left side (if there was the option)
+			if (lChild != nullptr)
+				LSidePromote(parent, lChild, rChild, rootNode, rSide);
 
-				//keeps saving the rChild of toPromote
-				while (toPromote.rChild != nullptr)
-					toPromote = *toPromote.rChild;
 
-				//CAN POTENTIALLY SET THESE TWO VALUES TO NULLPTR RATHER THAN toPromote's children--------------------------------------------------------------------------
-				//checks if the hovered node was the promote parent, then sets the pointer of the toPromote's parent to the toPromote (because toPromote is moving)
-				if (toPromote.parent == hoveredNode)
-					toPromote.parent->lChild = toPromote.rChild;
-				else
-					toPromote.parent->rChild = toPromote.rChild;
+			//promotes a child from the right side (if there was one)
+			else if (rChild != nullptr)
+				RSidePromote(parent, lChild, rChild, rootNode, rSide);
 
-				//sets the l/r children of toPromote
-				toPromote.rChild = rChild;
 
-				//only sets the lSide if the parent of toPromote wasn't the hovered node. If it was the hovered node, toPromote's lChild would end up pointing back to toPromote
-				if (!(toPromote.parent == hoveredNode))
-					toPromote.lChild = lChild;
+			//there were no children at all
+			else {
 
-				//if (debug)
-				//	std::cout << "Deleted node: " << hoveredNode->value << "\n";
-				////deletes the node
-				//delete hoveredNode;
-
-				//deleted node's parent node points to toPromote
-				if (!rootNode) {
-
-					toPromote.parent = parent;
-
-					//sets the parent to point to toPromote
-					if (rSide) {
-
-						parent->rChild = new Node();
-						*parent->rChild = toPromote;
-
-						//sets the children's parents of the the promoted node to the promoted node
-						if (parent->rChild->lChild != nullptr)
-							parent->rChild->lChild->parent = parent->rChild;
-
-						if (parent->rChild->rChild != nullptr)
-							parent->rChild->rChild->parent = parent->rChild;
-
-					} else {
-
-						parent->lChild = new Node();
-						*parent->lChild = toPromote;
-
-						//sets the children's parents of the the promoted node to the promoted node
-						if (parent->lChild->lChild != nullptr)
-							parent->lChild->lChild->parent = parent->lChild;
-
-						if (parent->lChild->rChild != nullptr)
-							parent->lChild->rChild->parent = parent->lChild;
-					}
-				} else {
-
-					//root doesn't have a parent
-					toPromote.parent = nullptr;
-
-					//sets the root to the innerLeft node
-					*root = toPromote;
-
-				}
-
-				//selects a child from the right side (if there was one)
-			} else if (rChild != nullptr) {
-
-				//sets the node to promote to the lChild
-				Node toPromote = *rChild;
-
-				//keeps saving the rChild of toPromote
-				while (toPromote.lChild != nullptr)
-					toPromote = *toPromote.lChild;
-
-				//dont have to set anything if it toPromote.parent was the hovered (because this is the node to be deleted)
-				//checks if the hovered node was the promote parent, then sets the pointer of the toPromote's parent to the toPromote (because toPromote is moving)
-				if (toPromote.parent == hoveredNode)
-					toPromote.parent->rChild = toPromote.lChild;
-				else
-					toPromote.parent->lChild = toPromote.lChild;
-
-				//sets the l/r children of toPromote
-				toPromote.lChild = nullptr;
-
-				//only sets the rSide if the parent of toPromote wasn't the hovered node. If it was the hovered node, toPromote's rChild would end up pointing back to toPromote
-				if (!(toPromote.parent == hoveredNode))
-					toPromote.rChild = rChild;
-
-				//if (debug)
-				//	std::cout << "Deleted node: " << hoveredNode->value << "\n";
-				////deletes the node
-				//delete hoveredNode;
-
-				if (!rootNode) {
-
-					//sets the parent to point to toPromote
-					if (rSide) {
-
-						parent->rChild = new Node();
-						*parent->rChild = toPromote;
-
-						//sets the children's parents of the the promoted node to the promoted node
-						if (parent->rChild->lChild != nullptr)
-							parent->rChild->lChild->parent = parent->rChild;
-
-						if (parent->rChild->rChild != nullptr)
-							parent->rChild->rChild->parent = parent->rChild;
-
-					} else {
-
-						parent->lChild = new Node();
-						*parent->lChild = toPromote;
-
-						//sets the children's parents of the the promoted node to the promoted node
-						if (parent->lChild->lChild != nullptr)
-							parent->lChild->lChild->parent = parent->lChild;
-
-						if (parent->lChild->rChild != nullptr)
-							parent->lChild->rChild->parent = parent->lChild;
-					}
-				} else {
-
-					//root doesn't have a parent
-					toPromote.parent = nullptr;
-
-					//sets the root to the innerLeft node
-					*root = toPromote;
-
-				}
-
-				//there were no children at all
-			} else {
-
-				//if (debug)
-				//	std::cout << "Deleted node: " << hoveredNode->value << "\n";
-				////deletes the node
-				//delete hoveredNode;
-
-				if (!rootNode) {
+				if (!rootNode)
 
 					//sets the parent's correct side to nullptr
 					if (rSide)
-						hoveredNode->parent->rChild = nullptr;
+						parent->rChild = nullptr;
 					else
-						hoveredNode->parent->lChild = nullptr;
-				} else {
+						parent->lChild = nullptr;
+
+				else
 					root = nullptr;
-				}
 			}
-
-
 		}
 
 		CalculateBalances();
 
 		if (balance)
 			Rebalance(root);
+	}
+
+	void LSidePromote(Node* parent, Node* lChild, Node* rChild, bool rootNode, bool rSide) {
+
+		//sets the node to promote to the lChild
+		Node toPromote = *lChild;
+
+		//keeps saving the rChild of toPromote
+		while (toPromote.rChild != nullptr)
+			toPromote = *toPromote.rChild;
+
+		//CAN POTENTIALLY SET THESE TWO VALUES TO NULLPTR RATHER THAN toPromote's children--------------------------------------------------------------------------
+		//checks if the hovered node was the promote parent, then sets the pointer of the toPromote's parent to the toPromote (because toPromote is moving)
+		if (toPromote.parent == hoveredNode)
+			toPromote.parent->lChild = toPromote.rChild;
+		else
+			toPromote.parent->rChild = toPromote.rChild;
+
+		//sets the l/r children of toPromote
+		toPromote.rChild = rChild;
+
+		//only sets the lSide if the parent of toPromote wasn't the hovered node. If it was the hovered node, toPromote's lChild would end up pointing back to toPromote
+		if (!(toPromote.parent == hoveredNode))
+			toPromote.lChild = lChild;
+
+		//if (debug)
+		//	std::cout << "Deleted node: " << hoveredNode->value << "\n";
+		////deletes the node
+		//delete hoveredNode;
+
+		//deleted node's parent node points to toPromote
+		if (!rootNode) {
+
+			toPromote.parent = parent;
+
+			//sets the parent to point to toPromote
+			if (rSide) {
+
+				parent->rChild = new Node();
+				*parent->rChild = toPromote;
+
+				//sets the children's parents of the the promoted node to the promoted node
+				if (parent->rChild->lChild != nullptr)
+					parent->rChild->lChild->parent = parent->rChild;
+
+				if (parent->rChild->rChild != nullptr)
+					parent->rChild->rChild->parent = parent->rChild;
+
+			} else {
+
+				parent->lChild = new Node();
+				*parent->lChild = toPromote;
+
+				//sets the children's parents of the the promoted node to the promoted node
+				if (parent->lChild->lChild != nullptr)
+					parent->lChild->lChild->parent = parent->lChild;
+
+				if (parent->lChild->rChild != nullptr)
+					parent->lChild->rChild->parent = parent->lChild;
+			}
+		} else {
+
+			//root doesn't have a parent
+			toPromote.parent = nullptr;
+
+			//sets the root to the innerLeft node
+			*root = toPromote;
+		}
+
+	}
+
+	void RSidePromote(Node* parent, Node* lChild, Node* rChild, bool rootNode, bool rSide) {
+
+		//sets the node to promote to the lChild
+		Node toPromote = *rChild;
+
+		//keeps saving the rChild of toPromote
+		while (toPromote.lChild != nullptr)
+			toPromote = *toPromote.lChild;
+
+		//dont have to set anything if it toPromote.parent was the hovered (because this is the node to be deleted)
+		//checks if the hovered node was the promote parent, then sets the pointer of the toPromote's parent to the toPromote (because toPromote is moving)
+		if (toPromote.parent == hoveredNode)
+			toPromote.parent->rChild = toPromote.lChild;
+		else
+			toPromote.parent->lChild = toPromote.lChild;
+
+		//sets the l/r children of toPromote
+		toPromote.lChild = nullptr;
+
+		//only sets the rSide if the parent of toPromote wasn't the hovered node. If it was the hovered node, toPromote's rChild would end up pointing back to toPromote
+		if (!(toPromote.parent == hoveredNode))
+			toPromote.rChild = rChild;
+
+		//if (debug)
+		//	std::cout << "Deleted node: " << hoveredNode->value << "\n";
+		////deletes the node
+		//delete hoveredNode;
+
+		if (!rootNode) {
+
+			//sets the parent to point to toPromote
+			if (rSide) {
+
+				parent->rChild = new Node();
+				*parent->rChild = toPromote;
+
+				//sets the children's parents of the the promoted node to the promoted node
+				if (parent->rChild->lChild != nullptr)
+					parent->rChild->lChild->parent = parent->rChild;
+
+				if (parent->rChild->rChild != nullptr)
+					parent->rChild->rChild->parent = parent->rChild;
+
+			} else {
+
+				parent->lChild = new Node();
+				*parent->lChild = toPromote;
+
+				//sets the children's parents of the the promoted node to the promoted node
+				if (parent->lChild->lChild != nullptr)
+					parent->lChild->lChild->parent = parent->lChild;
+
+				if (parent->lChild->rChild != nullptr)
+					parent->lChild->rChild->parent = parent->lChild;
+			}
+		} else {
+
+			//root doesn't have a parent
+			toPromote.parent = nullptr;
+
+			//sets the root to the innerLeft node
+			*root = toPromote;
+
+		}
 	}
 
 };
