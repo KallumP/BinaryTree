@@ -321,53 +321,33 @@ public:
 	//AVL rebalancing
 	void LRCase(Node* node) {
 
-		Node one = *node->lChild;
-		Node two = *node->lChild->rChild;
+		Node* three = node;
+		Node* one = three->lChild;
+		Node* two = one->rChild;
+		Node* B = two->lChild;
 
-		Node B = Node();
-		bool BNull;
-		if (two.lChild != nullptr) {
-			BNull = false;
-			B = *two.lChild;
-		} else {
-			BNull = true;
-		}
+		three->lChild = two;
+		two->parent = three;
 
+		two->lChild = one;
+		one->parent = two;
 
-		node->lChild = new Node();
-		*node->lChild = two;
-		node->lChild->parent = node;
-
-		one.rChild = new Node();
-		if (BNull)
-			one.rChild = nullptr;
-		else
-			*one.rChild = B;
-
-
-		node->lChild->lChild = new Node();
-		*node->lChild->lChild = one;
-
-		if (!BNull)
-			*node->lChild->lChild->rChild->parent = *node->lChild->lChild;
-		node->lChild->lChild->parent = node->lChild;
+		one->rChild = B;
+		if (B != nullptr) B->parent = one;
 
 		LLCase(node);
 	}
 	void LLCase(Node* node) {
 
-
 		Node* parent = node->parent;
-		bool isRoot = parent == nullptr;
-
 		Node* three = node;
 		Node* two = node->lChild;
 		Node* C = two->rChild;
 
 		//sets the parent/root to point to the two node
-		if (!isRoot) {
+		if (parent != nullptr) {
 
-			if (parent->rChild == node) {
+			if (parent->rChild == three) {
 				parent->rChild = two;
 				parent->rChild->parent = parent;
 			} else {
@@ -380,48 +360,28 @@ public:
 			root->parent = nullptr;
 		}
 
-		//sets the new root to have its lChild as the old root
-		two->rChild = node;
-		node->parent = two;
+		two->rChild = three;
+		three->parent = two;
 
-		//sets the old root to have its rChild as the new root's old lChild
-		node->lChild = C;
-		if (C!= nullptr) C->parent = node;
-
+		three->lChild = C;
+		if (C != nullptr) C->parent = three;
 	}
 
 	void RLCase(Node* node) {
 
-		Node  two = *node->rChild->lChild;
-		Node three = *node->rChild;
+		Node* one = node;
+		Node* three = one->rChild;
+		Node* two = three->lChild;
+		Node* C = two->rChild;
 
-		Node C = Node();
-		bool CNull;
-		if (two.rChild != nullptr) {
-			CNull = false;
-			C = *two.rChild;
-		} else {
-			CNull = true;
-		}
+		one->rChild = two;
+		two->parent = one;
 
+		two->rChild = three;
+		three->parent = two;
 
-		node->rChild = new Node();
-		*node->rChild = two;
-		node->rChild->parent = node;
-
-		three.lChild = new Node();
-		if (CNull)
-			three.lChild = nullptr;
-		else
-			*three.lChild = C;
-
-
-		node->rChild->rChild = new Node();
-		*node->rChild->rChild = three;
-
-		if (!CNull)
-			node->rChild->rChild->lChild->parent = node->rChild->rChild;
-		node->rChild->rChild->parent = node->rChild;
+		three->lChild = C;
+		if (C != nullptr) C->parent = three;
 
 		RRCase(node);
 	}
@@ -450,11 +410,9 @@ public:
 			root->parent = nullptr;
 		}
 
-		//sets the new root to have its lChild as the old root
 		two->lChild = node;
 		node->parent = two;
 
-		//sets the old root to have its rChild as the new root's old lChild
 		node->rChild = B;
 		if (B != nullptr) B->parent = node;
 
@@ -713,8 +671,8 @@ void DebugValues() {
 //remakes the tree with an amount of nodes
 void RemakeTree() {
 	Reset();
-	//InsertRandoms();
-	DebugValues();
+	InsertRandoms();
+	//DebugValues();
 
 	if (debug)
 		std::cout << "Ordered values: " << t->Traverse(t->root) << "\n";
