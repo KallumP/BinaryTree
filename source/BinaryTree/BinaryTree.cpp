@@ -266,6 +266,11 @@ public:
 
 	}
 
+	int GetHeight() {
+		if (root != nullptr)
+			return root->BiggestDepth();
+	}
+
 	//rebalances all nodes that need it
 	void Rebalance(Node* node) {
 
@@ -418,8 +423,6 @@ public:
 
 	}
 
-	//figure out why the pointers are not pointing to right locatoin after avl 
-	// 
 	//checks and saves if this node was being hovered on
 	void CheckHovered(Node* node, Vector2 nodePos) {
 
@@ -503,19 +506,29 @@ public:
 		while (toPromote->rChild != nullptr)
 			toPromote = toPromote->rChild;
 
-		//CAN POTENTIALLY SET THESE TWO VALUES TO NULLPTR RATHER THAN toPromote's children--------------------------------------------------------------------------
 		//checks if the hovered node was the promote parent, then sets the pointer of the toPromote's parent to the toPromote (because toPromote is moving)
-		if (toPromote->parent == hoveredNode)
+		if (toPromote->parent == hoveredNode) {
+
 			toPromote->parent->lChild = toPromote->rChild;
-		else
+			//toPromote->parent->lChild = toPromote->parent;
+		} else {
+
 			toPromote->parent->rChild = toPromote->lChild;
+			//toPromote->parent->rChild = toPromote->parent;
+		}
+
 
 		//sets the l/r children of toPromote
 		toPromote->rChild = rChild;
+		if (rChild != nullptr)
+			rChild->parent = toPromote;
 
 		//only sets the lSide if the parent of toPromote wasn't the hovered node. If it was the hovered node, toPromote's lChild would end up pointing back to toPromote
-		if (!(toPromote->parent == hoveredNode))
+		if (!(toPromote->parent == hoveredNode)) {
+
 			toPromote->lChild = lChild;
+			lChild->parent = toPromote;
+		}
 
 		//deleted node's parent node points to toPromote
 		if (!rootNode) {
@@ -525,9 +538,8 @@ public:
 			//sets the parent to point to toPromote
 			if (rSide) {
 
-				parent->rChild = new Node();
 				parent->rChild = toPromote;
-				parent->rChild->parent = parent;
+				toPromote->parent = parent;
 
 				//sets the children's parents of the the promoted node to the promoted node
 				if (parent->rChild->lChild != nullptr)
@@ -684,7 +696,7 @@ void Draw() {
 
 	ClearBackground(background);
 
-	std::string heightString = "Height of tree: " + std::to_string(t->totalHeight);
+	std::string heightString = "Height of tree: " + std::to_string(t->GetHeight());
 	std::string balanceString = ", Balancing: " + std::to_string(balance);
 	std::string toAddString = ", Next adding: " + std::to_string(toAdd) + " nodes";
 
