@@ -160,8 +160,7 @@ public:
 
 		if (balance) {
 
-			CalculateBalances();
-			Rebalance(root);
+			AttemptRebalance();
 		}
 	}
 
@@ -258,6 +257,21 @@ public:
 		return pos;
 	}
 
+	int GetHeight() {
+		if (root != nullptr)
+			return root->BiggestDepth();
+	}
+
+	bool endRebalanceRecursion;
+	void AttemptRebalance() {
+		CalculateBalances();
+		endRebalanceRecursion = false;
+		Rebalance(root);
+
+		if (endRebalanceRecursion)
+			AttemptRebalance();
+	}
+
 	//calculates the balances of the nodes in the tree
 	void CalculateBalances() {
 
@@ -266,23 +280,24 @@ public:
 
 	}
 
-	int GetHeight() {
-		if (root != nullptr)
-			return root->BiggestDepth();
-	}
 
 	//rebalances all nodes that need it
 	void Rebalance(Node* node) {
 
+
 		if (node != nullptr) {
 
-			if (node->lChild != nullptr)
+
+			if (node->lChild != nullptr) {
 				Rebalance(node->lChild);
+			}
 
-			if (node->rChild != nullptr)
+			if (node->rChild != nullptr) {
 				Rebalance(node->rChild);
+			}
 
-			if (node->rebalance) {
+
+			if (!endRebalanceRecursion && node->rebalance) {
 
 				if (debug)
 					std::cout << "Rebalancing node: " + std::to_string(node->value) + "\n";
@@ -290,16 +305,20 @@ public:
 				//checks if this was a left case
 				if (node->balanceFactor < 0) {
 
+					//stops the recursion from rebalancing
+					endRebalanceRecursion = true;
+
 					//checks if the left child exists
 					if (node->lChild != nullptr) {
 
-						//checks if this was a left left case
-						if (node->lChild->lDepth > node->lChild->rDepth)
-							LLCase(node);
-
 						//checks for left right case
-						else if (node->lChild->lDepth < node->lChild->rDepth)
+						if (node->lChild->lDepth < node->lChild->rDepth)
 							LRCase(node);
+
+						//checks if this was a left left case
+						//else if (node->lChild->lDepth > node->lChild->rDepth)
+						else
+							LLCase(node);
 					}
 
 					//checks if this was a right case
@@ -308,17 +327,16 @@ public:
 					//checks if the right child exists
 					if (node->rChild != nullptr) {
 
-						//checks if this was a right right case
-						if (node->rChild->lDepth < node->rChild->rDepth)
-							RRCase(node);
-
 						//checks for right left case
-						else if (node->rChild->lDepth > node->rChild->rDepth)
+						if (node->rChild->lDepth > node->rChild->rDepth)
 							RLCase(node);
+
+						//checks if this was a right right case
+						//else if (node->rChild->lDepth < node->rChild->rDepth)
+						else
+							RRCase(node);
 					}
 				}
-
-				CalculateBalances();
 			}
 		}
 	}
@@ -492,8 +510,7 @@ public:
 
 		if (balance) {
 
-			CalculateBalances();
-			Rebalance(root);
+			AttemptRebalance();
 		}
 	}
 
@@ -543,6 +560,7 @@ public:
 			//sets the parent to point to toPromote
 			if (rSide) {
 
+				parent->rChild = new Node();
 				parent->rChild = toPromote;
 				toPromote->parent = parent;
 
@@ -759,11 +777,10 @@ void Inputs() {
 	mousePos = GetMousePosition();
 }
 
-int main(void)
-{
+int main(void) {
 
 	toAddExponent = 1;
-	toAddMantisa = 1;
+	toAddMantisa = 2;
 	toAdd = toAddMantisa * std::pow(10, toAddExponent);
 
 	//makes the tree
